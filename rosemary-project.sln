@@ -9,6 +9,13 @@ Project("{39E2626F-3545-4960-A6E8-258AD8476CE5}") = "htg-native.Packaging", "htg
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "htg-native.NativeActivity", "htg-native.NativeActivity\htg-native.NativeActivity.vcxproj", "{028ADC3A-1009-445B-A6F8-E212EDACEA56}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{97B04C4E-2507-4F24-A48B-595CF3D375A8}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM

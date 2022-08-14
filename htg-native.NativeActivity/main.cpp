@@ -235,7 +235,7 @@ void init(struct android_app* app)
     rsm::drag_detector_ = {};
     rsm::pinch_detector_ = {};
     io.MouseDoubleClickMaxDist = 128/*px*/;
-    ANIEnv::init(g_App->activity->vm, "com.avetharun.rosemary", g_App->activity->clazz, g_App);
+    ANIEnv::init(g_App->activity->vm, "com.avetharun.aodman", g_App->activity->clazz, g_App);
     // run starter hooks
     rsm::HookManager::RunInitPost();
 
@@ -263,49 +263,6 @@ struct DebugConsole {
         pushf("%s\n%s", errs, ImRGB::resetstr());
     }
 
-};
-static inline float vertices[5 * 6 * 6] = {
-    -0.1f, -0.1f, -0.1f,  0.0f, 0.0f,
-     0.1f, -0.1f, -0.1f,  0.2f, 0.0f,
-     0.1f,  0.1f, -0.1f,  0.2f, 0.2f,
-     0.1f,  0.1f, -0.1f,  0.2f, 0.2f,
-    -0.1f,  0.1f, -0.1f,  0.0f, 0.2f,
-    -0.1f, -0.1f, -0.1f,  0.0f, 0.0f,
-
-    -0.1f, -0.1f,  0.1f,  0.0f, 0.0f,
-     0.1f, -0.1f,  0.1f,  0.2f, 0.0f,
-     0.1f,  0.1f,  0.1f,  0.2f, 0.2f,
-     0.1f,  0.1f,  0.1f,  0.2f, 0.2f,
-    -0.1f,  0.1f,  0.1f,  0.0f, 0.2f,
-    -0.1f, -0.1f,  0.1f,  0.0f, 0.0f,
-
-    -0.1f,  0.1f,  0.1f,  0.2f, 0.0f,
-    -0.1f,  0.1f, -0.1f,  0.2f, 0.2f,
-    -0.1f, -0.1f, -0.1f,  0.0f, 0.2f,
-    -0.1f, -0.1f, -0.1f,  0.0f, 0.2f,
-    -0.1f, -0.1f,  0.1f,  0.0f, 0.0f,
-    -0.1f,  0.1f,  0.1f,  0.2f, 0.0f,
-
-     0.1f,  0.1f,  0.1f,  0.2f, 0.0f,
-     0.1f,  0.1f, -0.1f,  0.2f, 0.2f,
-     0.1f, -0.1f, -0.1f,  0.0f, 0.2f,
-     0.1f, -0.1f, -0.1f,  0.0f, 0.2f,
-     0.1f, -0.1f,  0.1f,  0.0f, 0.0f,
-     0.1f,  0.1f,  0.1f,  0.2f, 0.0f,
-
-    -0.1f, -0.1f, -0.1f,  0.0f, 0.2f,
-     0.1f, -0.1f, -0.1f,  0.2f, 0.2f,
-     0.1f, -0.1f,  0.1f,  0.2f, 0.0f,
-     0.1f, -0.1f,  0.1f,  0.2f, 0.0f,
-    -0.1f, -0.1f,  0.1f,  0.0f, 0.0f,
-    -0.1f, -0.1f, -0.1f,  0.0f, 0.2f,
-
-    -0.1f,  0.1f, -0.1f,  0.0f, 0.2f,
-     0.1f,  0.1f, -0.1f,  0.2f, 0.2f,
-     0.1f,  0.1f,  0.1f,  0.2f, 0.0f,
-     0.1f,  0.1f,  0.1f,  0.2f, 0.0f,
-    -0.1f,  0.1f,  0.1f,  0.0f, 0.0f,
-    -0.1f,  0.1f, -0.1f,  0.0f, 0.2f
 };
 struct RSMI : rsm::GenericHook {
     static inline rsm::Renderer::Camera activecamera;
@@ -337,22 +294,22 @@ struct RSMI : rsm::GenericHook {
     void InitPost() {
         ImGui::SetCurrentFont(rsm::Fonts::default_font);
     }
-    void InitGL() {
-        
-        // default shader (red color)
-        shader.compile();
-
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        glBindVertexArray(VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, 5 * 6 * 6, vertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-    }
-    static inline ani::SharedPreferences getSharedPreferences(const char* name = "alib:settings") {
+    //void InitGL() {
+    //    
+    //    // default shader (red color)
+    //    shader.compile();
+    //
+    //    glGenVertexArrays(1, &VAO);
+    //    glGenBuffers(1, &VBO);
+    //
+    //    glBindVertexArray(VAO);
+    //
+    //    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //    glBufferData(GL_ARRAY_BUFFER, 5 * 6 * 6, vertices, GL_STATIC_DRAW);
+    //    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    //    glEnableVertexAttribArray(0);
+    //}
+    static inline ani::SharedPreferences getSharedPreferences(const char* name = "alib:aodman") {
         JNIEnv* jni;
         g_App->activity->vm->AttachCurrentThread(&jni, NULL);
         return ani::SharedPreferences(jni, g_App->activity->clazz, name);
@@ -500,34 +457,6 @@ struct ui_impl_settings : rsm::GenericHook {
         ImGui::SetCursorPos({ 32, 16 });
         // Begin networking settings
         if (ImGui::CollapsingHeader(RSMI::T::getk("settings_adv_modal").c_str())) {
-            if (ani::adb_enabled()) {
-                ImGui::ThumbSwitch("##settings_use_serial_USB", &GlobalState::UseSerialUSB, RSMI::T::getk("sett_use_usb").c_str());
-            }
-            else {
-                ImGui::BeginDisabled();
-                ImGui::ThumbSwitch("##settings_use_serial_USB", &GlobalState::UseSerialUSB, RSMI::T::getk("sett_use_usb").c_str());
-                ImGui::EndDisabled();
-                ImGui::PushStyleColor(ImGuiCol_Text, { 185, 0,0,255 });
-                ImGui::UrlHTTPText("https://www.digitaltrends.com/mobile/how-to-get-developer-options-on-android/", ani::Networking::openURLBrowser,
-                    RSMI::T::getk("sett_adb_required").c_str());
-                ImGui::PopStyleColor();
-
-            }
-            ImGui::ThumbSwitch("##settings_use_serial_WS", &GlobalState::UseSerialWebsocket, RSMI::T::getk("sett_use_websocket").c_str());
-            
-            ImGui::PushItemWidth(ImGui::CalcTextSize("######").x);
-            if (!GlobalState::UseSerialWebsocket) { ImGui::BeginDisabled(); }
-            bool __in_ws_port = ImGui::InputInt("##settings_serial_websocket_port", &GlobalState::SerialWebsocketPort, 0, 0, ImGuiInputTextFlags_CharsDecimal);
-            ImGui::PopItemWidth();
-            if (__in_ws_port) {
-                if (GlobalState::SerialWebsocketPort < 802) {
-                    GlobalState::SerialWebsocketPort = 802;
-                }
-                if (GlobalState::SerialWebsocketPort > 32755) {
-                    GlobalState::SerialWebsocketPort = 32755;
-                }
-            }
-            if (!GlobalState::UseSerialWebsocket) { ImGui::EndDisabled(); }
         }
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 512);
         if (ImGui::TextButton("license_btn", RSMI::T::getk("view_licenses_modal").c_str())) {

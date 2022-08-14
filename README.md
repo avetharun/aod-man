@@ -1,10 +1,9 @@
-# Rosemary Project
-An implementation of [Hitogata](https://sites.google.com/site/vhitogata/), a VTubing software for Android and Desktop.
+# aod-man | Always On Display Manager
 
-Implementation will use a virtual camera instead of a window, on both iOS, Android, and Desktop. 
+A fully customizable Always On Display engine.
 
-It should also be possible to export to anything that uses the VTubing software on iOS, that's used by VTube Studio. Including but also not limited to physically exporting face tracking points, 
-
+Tested devices:
+`Samsung s10e`
 
 Thank: 
 [ImGui-Android](https://github.com/Ciremun/imgui-android)
