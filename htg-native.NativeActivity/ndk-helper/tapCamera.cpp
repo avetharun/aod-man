@@ -251,9 +251,9 @@ void TapCamera::Pinch( const Vec2& v1, const Vec2& v2 )
     Vec2 vec = v1 - v2;
     vec.Value( x_diff, y_diff );
 
-    float fDistanceSQ = x_diff * x_diff + y_diff * y_diff;
+    pinch_fDistanceSQ = x_diff * x_diff + y_diff * y_diff;
 
-    float f = pinch_start_distance_SQ_ / fDistanceSQ;
+    float f = pinch_start_distance_SQ_ / pinch_fDistanceSQ;
     if( f < 1.f )
         f = -1.f / f + 1.0f;
     else

@@ -183,6 +183,10 @@ void init(struct android_app* app)
 
         g_EglSurface = eglCreateWindowSurface(g_EglDisplay, egl_config, g_App->window, NULL);
         eglMakeCurrent(g_EglDisplay, g_EglSurface, g_EglSurface, g_EglContext);
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+
         rsm::HookManager::RunInitGL();
     }
 
@@ -327,8 +331,26 @@ struct RSMI : rsm::GenericHook {
             return alib_j_getstr(TranslationKeys.at(key));
         }
     };
+    static inline rsm::Renderer::Shader shader;
+    static inline GLuint VBO = 0;
+    static inline GLuint VAO = 0;
     void InitPost() {
         ImGui::SetCurrentFont(rsm::Fonts::default_font);
+    }
+    void InitGL() {
+        
+        // default shader (red color)
+        shader.compile();
+
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, 5 * 6 * 6, vertices, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
     }
     static inline ani::SharedPreferences getSharedPreferences(const char* name = "alib:settings") {
         JNIEnv* jni;
@@ -338,9 +360,6 @@ struct RSMI : rsm::GenericHook {
     void Render() {
     }
     
-    static inline rsm::Renderer::Shader shader;
-    static inline GLuint VBO = 0;
-    static inline GLuint VAO = 0;
 
     void Start() {
         cwError::onError = DebugConsole::cwErrorHandler;
@@ -356,19 +375,6 @@ struct RSMI : rsm::GenericHook {
         }
         cwError::serrof("Translation key translation_test returned: %s", T::getk("translation_test").c_str());
 
-        shader.compile();
-
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        glBindVertexArray(VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, 5 * 6 * 6, vertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-        activecamera.setRotation({ 0,0,180 });
-        
     }
     static inline std::array<glm::mat4, 3> matrix = {};
     void PreSwap() {
@@ -389,13 +395,6 @@ struct RSMI : rsm::GenericHook {
             ImGui::GetForegroundDrawList()->AddLine({ 0,end_pos.y}, end_pos, ImGui::GetColorU32(ImGuiCol_Border), 4.0f);
             ImGui::GetBackgroundDrawList()->AddRectFilled({ 0,0 }, end_pos, ImGui::GetColorU32(ImGuiCol_Button));
         }
-        shader.use();
-        // create transformations
-        glm::vec2 tmp = rsm::getDragDelta();
-        RSMI::activecamera.transform_rotation.xy(tmp.x * ImGui::GetIO().DeltaTime, tmp.y * ImGui::GetIO().DeltaTime);
-        shader.setMat4("matrix", activecamera.GetFullPerspectiveMatrix());
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
     }
     
     static bool BackArrowModal() { 
@@ -547,12 +546,37 @@ struct ui_impl_renderer : rsm::GenericHook {
     }
     void Render() {
         float _angle;
+        glm::vec2 tmp_fovc = rsm::getPinchDeltaV();
         ImGui::BeginFullscreen();
         ImGui::SetCursorPos(GlobalState::ui_begin);
         if (RSMI::BackArrowModal()) {
             this->pop();
         }
+
+
+        ImGui::SliderFloat("##zoom_slider", &RSMI::activecamera.fov, 12, 200);
+        bool _canmove = !ImGui::IsItemActive();
+        ImGui::Text("%f", RSMI::activecamera.m_rotation.x);
+        ImGui::Text("%f", RSMI::activecamera.m_rotation.y);
         ImGui::EndFullscreen();
+
+        RSMI::shader.use();
+        // create transformations
+        glm::vec2 tmp = rsm::getDragDelta();
+        if (!rsm::MultiFingerL && !rsm::MultiFinger && _canmove) {
+            // handle rotation, if only 1 finger is present
+            RSMI::activecamera.transform_rotation.yx(10 * tmp.x * ImGui::GetIO().DeltaTime, 10 * -tmp.y * ImGui::GetIO().DeltaTime);
+        }
+        if (rsm::MultiFinger && rsm::MultiFingerL && _canmove) {
+            tmp /= RSMI::activecamera.fov * 0.01f;
+            RSMI::activecamera.transform_position.xy(.05f * tmp.x * ImGui::GetIO().DeltaTime, .05f * tmp.y * ImGui::GetIO().DeltaTime);
+            alib_clampptr<float>(&RSMI::activecamera.m_position.x, -8.0f, 8.0f);
+            alib_clampptr<float>(&RSMI::activecamera.m_position.y, -10.0f, 10.0f);
+        }
+        RSMI::shader.setMat4("matrix", RSMI::activecamera.GetFullOrthoMatrix());
+        glBindVertexArray(RSMI::VAO);
+        glDrawArrays(GL_LINES, 0, 180);
+
     }
 };
 RSM_HOOK_ENABLE(ui_impl_renderer);
@@ -684,6 +708,7 @@ void tick()
     eglSwapBuffers(g_EglDisplay, g_EglSurface);
     rsm::HookManager::RunPostRender();
     ImGui::ElementStubImpl::ResetOffsets();
+    rsm::MultiFingerL = rsm::MultiFinger;
 }
 
 void shutdown()
@@ -695,18 +720,22 @@ void shutdown()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplAndroid_Shutdown();
     ImGui::DestroyContext();
+    try {
+        if (g_EglDisplay != EGL_NO_DISPLAY)
+        {
+            eglMakeCurrent(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
-    if (g_EglDisplay != EGL_NO_DISPLAY)
-    {
-        eglMakeCurrent(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            if (g_EglContext != EGL_NO_CONTEXT)
+                //eglDestroyContext(g_EglDisplay, g_EglContext);
 
-        if (g_EglContext != EGL_NO_CONTEXT)
-            eglDestroyContext(g_EglDisplay, g_EglContext);
+            if (g_EglSurface != EGL_NO_SURFACE)
+                eglDestroySurface(g_EglDisplay, g_EglSurface);
 
-        if (g_EglSurface != EGL_NO_SURFACE)
-            eglDestroySurface(g_EglDisplay, g_EglSurface);
-
-        eglTerminate(g_EglDisplay);
+            eglTerminate(g_EglDisplay);
+        }
+    }
+    catch (std::exception E) {
+        cwError::serrof("Error upon destroying EGL context: %s", E.what());
     }
 
     g_EglDisplay = EGL_NO_DISPLAY;
@@ -754,7 +783,7 @@ static int32_t handleInputEvent(struct android_app* app, AInputEvent* inputEvent
         ndk_helper::GESTURE_STATE dragState = rsm::drag_detector_.Detect(inputEvent);
         ndk_helper::GESTURE_STATE pinchState = rsm::pinch_detector_.Detect(inputEvent);
         rsm::DoubleTapped = false;
-
+        rsm::MultiFinger = rsm::tap_camera_.pinching_;
         //Double tap detector has a priority over other detectors
         if (doubleTapState == ndk_helper::GESTURE_STATE_ACTION)
         {

@@ -34,7 +34,7 @@ namespace ndk_helper
  */
 class TapCamera
 {
-private:
+public:
     //Trackball
     Vec2 vec_ball_center_;
     float ball_radius_;
@@ -51,6 +51,7 @@ private:
     Vec2 vec_pinch_start_;
     Vec2 vec_pinch_start_center_;
     float pinch_start_distance_SQ_;
+    float pinch_fDistanceSQ;
 
     //Camera shift
     Vec3 vec_offset_;
@@ -80,7 +81,6 @@ private:
     Vec3 PointOnSphere( Vec2& point );
     void BallUpdate();
     void InitParameters();
-public:
     TapCamera();
     virtual ~TapCamera();
     void BeginDrag( const Vec2& vec );

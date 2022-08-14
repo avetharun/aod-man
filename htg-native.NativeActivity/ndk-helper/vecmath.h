@@ -23,33 +23,33 @@ namespace ndk_helper
 {
 
 /******************************************************************
- * Helper class for vector math operations
+ * Helper struct for vector math operations
  * Currently all implementations are in pure C++.
- * Each class is an opaque class so caller does not have a direct access
+ * Each struct is an opaque struct so caller does not have a direct access
  * to each element. This is for an ease of future optimization to use vector operations.
  *
  */
 
-class Vec2;
-class Vec3;
-class Vec4;
-class Mat4;
+struct Vec2;
+struct Vec3;
+struct Vec4;
+struct Mat4;
 
 /******************************************************************
- * 2 elements vector class
+ * 2 elements vector struct
  *
  */
-class Vec2
+struct Vec2
 {
 private:
+public:
     float x_;
     float y_;
 
-public:
-    friend class Vec3;
-    friend class Vec4;
-    friend class Mat4;
-    friend class Quaternion;
+    friend struct Vec3;
+    friend struct Vec4;
+    friend struct Mat4;
+    friend struct Quaternion;
 
     Vec2()
     {
@@ -242,18 +242,18 @@ public:
 };
 
 /******************************************************************
- * 3 elements vector class
+ * 3 elements vector struct
  *
  */
-class Vec3
+struct Vec3
 {
 private:
+public:
     float x_, y_, z_;
 
-public:
-    friend class Vec4;
-    friend class Mat4;
-    friend class Quaternion;
+    friend struct Vec4;
+    friend struct Mat4;
+    friend struct Quaternion;
 
     Vec3()
     {
@@ -483,18 +483,18 @@ public:
 };
 
 /******************************************************************
- * 4 elements vector class
+ * 4 elements vector struct
  *
  */
-class Vec4
+struct Vec4
 {
 private:
+public:
     float x_, y_, z_, w_;
 
-public:
-    friend class Vec3;
-    friend class Mat4;
-    friend class Quaternion;
+    friend struct Vec3;
+    friend struct Mat4;
+    friend struct Quaternion;
 
     Vec4()
     {
@@ -742,15 +742,14 @@ public:
  * 4x4 matrix
  *
  */
-class Mat4
+struct Mat4
 {
-private:
+public:
     float f_[16];
 
-public:
-    friend class Vec3;
-    friend class Vec4;
-    friend class Quaternion;
+    friend struct Vec3;
+    friend struct Vec4;
+    friend struct Quaternion;
 
     Mat4();
     Mat4( const float* );
@@ -954,18 +953,15 @@ public:
 };
 
 /******************************************************************
- * Quaternion class
+ * Quaternion struct
  *
  */
-class Quaternion
+struct Quaternion
 {
-private:
     float x_, y_, z_, w_;
-
-public:
-    friend class Vec3;
-    friend class Vec4;
-    friend class Mat4;
+    friend struct Vec3;
+    friend struct Vec4;
+    friend struct Mat4;
 
     Quaternion()
     {

@@ -1,6 +1,12 @@
 #ifndef __rosemary_project_renderer_h_
 #define __rosemary_project_renderer_h_
 
+#define TINYGLTF_IMPLEMENTATION
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "tiny_gltf.h"
+
 #include "utils.hpp"
 
 #include <GLES/gl.h>
@@ -33,23 +39,38 @@ namespace rsm {
     static ndk_helper::PerfMonitor monitor_;
     static ndk_helper::TapCamera tap_camera_;
     static bool DoubleTapped;
+    static bool MultiFinger, MultiFingerL;
     static float DoubleTapSeconds;
     enum {
         rsm_DoubleTapped_First = 4,
         rsm_DoubleTapped_End = 5,
         rsm_DoubleTappedActive = 6,
     };
-    static glm::vec2 PinchPositionBegin, PinchPositionEnd, DragPosition, DoubleTapPosition;
-    static glm::vec2 m_PinchPositionBeginL, m_PinchPositionEndL, m_DragPositionL, m_DoubleTapPositionL;
-    static glm::vec2 getPinch1Delta() {
+    static glm::vec3 PinchPositionBegin, PinchPositionEnd, DragPosition, DoubleTapPosition;
+    static glm::vec3 m_PinchPositionBeginL, m_PinchPositionEndL, m_DragPositionL, m_DoubleTapPositionL;
+    static inline glm::vec3 getPinch1Delta() {
         return m_PinchPositionBeginL - PinchPositionBegin;
     }
-    static glm::vec2 getPinch2Delta() {
+    static inline glm::vec3 getPinch2Delta() {
         return m_PinchPositionEndL - PinchPositionEnd;
     }
-    static glm::vec2 getDragDelta() {
+    // Squared addative of the two deltas
+    static float getPinchDeltaF() {
+        auto v1 = getPinch1Delta();
+        auto v2 = getPinch2Delta();
+        auto v3 = v1 - v2;
+        float out = v3.x + v3.y;
+        return out;
+    }
+    static inline glm::vec3 getPinchDeltaV() {
+        auto v1 = getPinch1Delta();
+        auto v2 = getPinch2Delta();
+        return v1 - v2;
+    }
+    static glm::vec3 getDragDelta() {
         ImVec2 tmp = ImGui::GetIO().MouseDelta;
-        return {tmp.x, tmp.y};
+        if (abs(tmp.x) > 128 /*px*/ || abs(tmp.y) > 128) { return {0,0,0}; }
+        return { tmp.x, tmp.y, 0 };
     }
     namespace Renderer {
         static void TransformPosition(ndk_helper::Vec2& vec);
@@ -72,7 +93,7 @@ namespace rsm {
 
                 void main()
                 {
-	                FragColor = vec4( 1.0, 0, 0, 0.2f );
+	                FragColor = vec4( 1.0, 0, 0, 1.0f );
                 }
             )";
             GLuint shader_id = 0;
@@ -245,7 +266,7 @@ namespace rsm {
             // note: this is INVERTED! Use setPosition() and getPosition() respectively.
             glm::vec3 m_lookat_pos = glm::vec3(0.0f, 0.0f, 0.0f);
             float lookat_distance;
-            glm::vec3 m_position = glm::vec3{0.0f, 0.0f, -12.0f};
+            glm::vec3 m_position = glm::vec3{0.0f, 0.0f, -3.0f};
             // in degrees (0-360)
             glm::vec3 m_rotation = glm::vec3(0.0f, 0.0f, 180.0f);
             glm::mat4 m_view = glm::mat4(1.0f);
@@ -271,23 +292,42 @@ namespace rsm {
                 void y(float _y) { *m_y -= _y; };
                 void z(float _z) { *m_z += _z; };
                 void xy(float _x, float _y) { x(_x); y(_y); }
+                void zy(float _z, float _y) { z(_z); y(_y); }
+                void xz(float _x, float _y) { x(_x); z(_y); }
+                void yz(float _z, float _y) { y(_z); z(_y); }
+                void yx(float _z, float _y) { y(_z); x(_y); }
+                void zx(float _z, float _x) { z(_z); x(_x); }
                 void xyz(float _x, float _y, float _z) { x(_x); y(_y); z(_z); }
             };
+            // relative transform
             transform_t transform_position{&m_position.x, &m_position.y, &m_position.z};
+            // relative transform
             transform_t transform_rotation{&m_rotation.x, &m_rotation.y, &m_rotation.z };
             glm::mat4 GetFullPerspectiveMatrix() {
-                glm::mat4 view = glm::mat4(1.0f);
+                
+                glm::mat4 trans = glm::perspective(glm::radians(fov), ((float)width / (float)height), near, far);
                 getWindowClip();
-                glm::mat4 projection = glm::perspective(glm::radians(fov), ( (float)width / (float)height ), near, far);
-                glm::mat4 model = glm::mat4(1.0f);
-                view = glm::translate(view, m_position);
+                if (m_rotation.x > 360) { m_rotation.x -= 360; } if (m_rotation.x < -360) { m_rotation.x += 360; }
+                if (m_rotation.y > 360) { m_rotation.y -= 360; } if (m_rotation.y < -360) { m_rotation.y += 360; }
+                trans = glm::translate(trans, m_position * glm::vec3{1,1,1});
                 // x axis
-                model = glm::rotate(model, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+                trans = glm::rotate(trans, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
                 // y axis
-                model = glm::rotate(model, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-                // z axis
-                model = glm::rotate(model, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-                return projection * view * model;
+                trans = glm::rotate(trans, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+                return trans;
+            }
+            glm::mat4 GetFullOrthoMatrix() {
+
+                getWindowClip();
+                glm::mat4 trans = glm::ortho(-width * 0.1f / fov, width * 0.1f / fov, -height * 0.1f / fov, height * 0.1f / fov, near, far);
+                if (m_rotation.x > 360) { m_rotation.x -= 360; } if (m_rotation.x < -360) { m_rotation.x += 360; }
+                if (m_rotation.y > 360) { m_rotation.y -= 360; } if (m_rotation.y < -360) { m_rotation.y += 360; }
+                trans = glm::translate(trans, m_position * glm::vec3{ 1,1,1 });
+                // x axis
+                trans = glm::rotate(trans, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+                // y axis
+                trans = glm::rotate(trans, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+                return trans;
             }
             // [0] : projection
             // [1] : view
@@ -331,7 +371,12 @@ namespace rsm {
         operator ImTextureID() {
             return (void*)(intptr_t)imgid;
         }
-
+    };
+    struct Mesh {
+        tinygltf::Model& model;
+        static Mesh* Load(const char* assetname) {
+            
+        }
     };
 };
 

@@ -77,6 +77,8 @@
     <ClInclude Include="ndk-helper\vecmath.h">
       <Filter>ndk-helper</Filter>
     </ClInclude>
+    <ClInclude Include="tiny_obj_loader.h" />
+    <ClInclude Include="tiny_gltf.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="android_native_app_glue.c" />
