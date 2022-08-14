@@ -7,9 +7,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 \]
-Rosemary Project License [GPL-3a]
+AODMan Project License [GPL-3a]
     Copyright (C) 2022 Lillium (Avetharun) Bruno
-    https://github.com/avetharun/rosemary-project-native
+    https://github.com/avetharun/aod-man
     https://raw.githubusercontent.com/avetharun/avetharun/main/gnu_gpl_3_a_LICENSE
 
 cURLpp [MIT]

@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rosemary Project", "Rosemary Project", "{6CE85274-478F-45BA-B6E7-53B0F13C9A89}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Always On Display Man.", "Always On Display Man.", "{6CE85274-478F-45BA-B6E7-53B0F13C9A89}"
 EndProject
-Project("{39E2626F-3545-4960-A6E8-258AD8476CE5}") = "htg-native.Packaging", "htg-native.Packaging\htg-native.Packaging.androidproj", "{7B5E57AF-C443-4E35-ABCD-9EAC23B4F6CD}"
+Project("{39E2626F-3545-4960-A6E8-258AD8476CE5}") = "aod.Packaging", "htg-native.Packaging\aod.Packaging.androidproj", "{7B5E57AF-C443-4E35-ABCD-9EAC23B4F6CD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "htg-native.NativeActivity", "htg-native.NativeActivity\htg-native.NativeActivity.vcxproj", "{028ADC3A-1009-445B-A6F8-E212EDACEA56}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "aod.NativeActivity", "htg-native.NativeActivity\htg-native.NativeActivity.vcxproj", "{028ADC3A-1009-445B-A6F8-E212EDACEA56}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{97B04C4E-2507-4F24-A48B-595CF3D375A8}"
 	ProjectSection(SolutionItems) = preProject

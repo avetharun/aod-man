@@ -21,8 +21,6 @@
 #include "rsm_ui_man.h"
 #include "rsm_renderer.h"
 
-#include "image_parse_face.h"
-
 #include "ani.h"
 #include <zlib.h>
 
@@ -333,7 +331,6 @@ struct RSMI : rsm::GenericHook {
         cwError::serrof("Translation key translation_test returned: %s", T::getk("translation_test").c_str());
 
     }
-    static inline std::array<glm::mat4, 3> matrix = {};
     void PreSwap() {
 
         ImGuiContext* g = ImGui::GetCurrentContext();
@@ -352,6 +349,7 @@ struct RSMI : rsm::GenericHook {
             ImGui::GetForegroundDrawList()->AddLine({ 0,end_pos.y}, end_pos, ImGui::GetColorU32(ImGuiCol_Border), 4.0f);
             ImGui::GetBackgroundDrawList()->AddRectFilled({ 0,0 }, end_pos, ImGui::GetColorU32(ImGuiCol_Button));
         }
+        ImGui::TextForeground(alib_strfmts("fps: %.2f", ImGui::GetIO().Framerate).c_str(), GlobalState::ui_begin);
     }
     
     static bool BackArrowModal() { 
@@ -362,8 +360,7 @@ struct RSMI : rsm::GenericHook {
         ImVec2 tsz = ImGui::CalcTextSize("n");
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0,0 });
         ImGui::PushStyleColor(ImGuiCol_Button, { 0,0,0,0 });
-        ImGui::Button("n##back");
-        retv = ImGui::IsItemClicked();
+        retv = ImGui::Button("n##back");
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
         ImGui::PopFont();
@@ -378,13 +375,11 @@ struct RSMI : rsm::GenericHook {
         ImVec2 tsz = ImGui::CalcTextSize("m");
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0,0 });
         ImGui::PushStyleColor(ImGuiCol_Button, { 0,0,0,0 });
-        ImGui::Button("m##forward");
-        retv = ImGui::IsItemClicked();
+        retv = ImGui::Button("m##forward");
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
         ImGui::PopFont();
         ImGui::SetWindowFontScale(fsz_last);
-
         return retv;
     }
 };
@@ -470,46 +465,19 @@ struct ui_impl_settings : rsm::GenericHook {
 
 };
 RSM_HOOK_ENABLE(ui_impl_settings);
-struct ui_impl_renderer : rsm::GenericHook {
-    void Start() {
-    }
+struct ui_impl_aodview : rsm::GenericHook {
+
     void Render() {
-        float _angle;
-        glm::vec2 tmp_fovc = rsm::getPinchDeltaV();
         ImGui::BeginFullscreen();
         ImGui::SetCursorPos(GlobalState::ui_begin);
         if (RSMI::BackArrowModal()) {
             this->pop();
         }
-
-
-        ImGui::SliderFloat("##zoom_slider", &RSMI::activecamera.fov, 12, 200);
-        bool _canmove = !ImGui::IsItemActive();
-        ImGui::Text("%f", RSMI::activecamera.m_rotation.x);
-        ImGui::Text("%f", RSMI::activecamera.m_rotation.y);
         ImGui::EndFullscreen();
-
-        RSMI::shader.use();
-        // create transformations
-        glm::vec2 tmp = rsm::getDragDelta();
-        if (!rsm::MultiFingerL && !rsm::MultiFinger && _canmove) {
-            // handle rotation, if only 1 finger is present
-            RSMI::activecamera.transform_rotation.yx(10 * tmp.x * ImGui::GetIO().DeltaTime, 10 * -tmp.y * ImGui::GetIO().DeltaTime);
-        }
-        if (rsm::MultiFinger && rsm::MultiFingerL && _canmove) {
-            tmp /= RSMI::activecamera.fov * 0.01f;
-            RSMI::activecamera.transform_position.xy(.05f * tmp.x * ImGui::GetIO().DeltaTime, .05f * tmp.y * ImGui::GetIO().DeltaTime);
-            alib_clampptr<float>(&RSMI::activecamera.m_position.x, -8.0f, 8.0f);
-            alib_clampptr<float>(&RSMI::activecamera.m_position.y, -10.0f, 10.0f);
-        }
-        RSMI::shader.setMat4("matrix", RSMI::activecamera.GetFullOrthoMatrix());
-        glBindVertexArray(RSMI::VAO);
-        glDrawArrays(GL_LINES, 0, 180);
-
     }
 };
-RSM_HOOK_ENABLE(ui_impl_renderer);
-struct ui_impl_charman : rsm::GenericHook {
+RSM_HOOK_ENABLE(ui_impl_aodview);
+struct ui_impl_aodedit : rsm::GenericHook {
 
     void Start() {
     }
@@ -519,14 +487,30 @@ struct ui_impl_charman : rsm::GenericHook {
         if (RSMI::BackArrowModal()) {
             this->pop();
         }
-        ImGui::BeginDragScrollableChild("##character_mgr", { 0,0 }, true);
+        ImGui::PushFont(rsm::Fonts::symbols);
+        float fsz_last = ImGui::GetCurrentWindow()->FontWindowScale;
+        ImGui::SetWindowFontScale(1.0f);
+        ImVec2 tsz = ImGui::CalcTextSize("B");
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0,0 });
+        ImGui::PushStyleColor(ImGuiCol_Button, { 0,0,0,0 });
+        ImGui::SameLine();
+        if (ImGui::Button("B##preview_btn")) {
+            this->push(ui_impl_aodview_runner);
+        }
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
+        ImGui::PopFont();
+        ImGui::SetWindowFontScale(fsz_last);
+
+        ImGui::BeginDragScrollableChild("##aod_edit_window", { 0,0 }, true);
+
         ImGui::EndDragScrollableChild();
         ImGui::EndFullscreen();
 
     }
 
 };
-RSM_HOOK_ENABLE(ui_impl_charman);
+RSM_HOOK_ENABLE(ui_impl_aodedit);
 struct ui_impl_main : rsm::GenericHook {
     float __percent;
     void Start() {
@@ -542,7 +526,7 @@ struct ui_impl_main : rsm::GenericHook {
         ImGui::PushFont(rsm::Fonts::symbols);
         float fsz_last = ImGui::GetCurrentWindow()->FontWindowScale;
         ImGui::SetWindowFontScale(1.0f);
-        ImVec2 tsz = ImGui::CalcTextSize("9$|B");
+        ImVec2 tsz = ImGui::CalcTextSize("$9#");
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0,0 });
         ImGui::SetCursorPos(GlobalState::ui_begin);
 
@@ -556,13 +540,11 @@ struct ui_impl_main : rsm::GenericHook {
             this->push(ui_impl_debug_runner);
         }
         ImGui::SameLine();
-        if (ImGui::Button("|##charman_btn")) {
-            this->push(ui_impl_charman_runner);
+        ImGui::PushID("t_aodedit_button");
+        if (ImGui::Button("#")) {
+            this->push(ui_impl_aodedit_runner);
         }
-        ImGui::SameLine();
-        if (ImGui::Button("B##charman_btn")) {
-            this->push(ui_impl_renderer_runner);
-        }
+        ImGui::PopID();
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
         ImGui::PopFont();
@@ -702,8 +684,14 @@ void rsm::Renderer::TransformPosition(ndk_helper::Vec2& vec) {
 }
 static int32_t handleInputEvent(struct android_app* app, AInputEvent* inputEvent)
 {
-    
-    
+
+
+    if (AKeyEvent_getKeyCode(inputEvent) == AKEYCODE_BACK) {
+        // actions on back key
+        //rsm::GenericHook::pop();
+        return 1;
+    };
+
     if (AInputEvent_getType(inputEvent) == AINPUT_EVENT_TYPE_MOTION)
     {
 
@@ -755,6 +743,11 @@ static int32_t handleInputEvent(struct android_app* app, AInputEvent* inputEvent
     }
     return ImGui_ImplAndroid_HandleInputEvent(inputEvent);
 }
+
+void onBackPressedNative(JNIEnv* env, jobject clazz) {
+    cwError::serrof("Back button pressed");
+    return;
+};
 void android_main(struct android_app* app)
 {
     app->onAppCmd = handleAppCmd;

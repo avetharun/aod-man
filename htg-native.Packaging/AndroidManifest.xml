@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Changes made to Package Name should also be reflected in the Debugging - Package Name property, in the Property Pages -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.avetharun.rosemary"
+        package="com.avetharun.aodman"
         android:versionCode="1"
         android:versionName="1.0">
 
@@ -23,8 +23,6 @@
 		android:networkSecurityConfig="@xml/network_security_config"
 		
 		>
-
-
 		<!-- Our activity is the built-in NativeActivity framework class.
              This will take care of integrating with our NDK code. 
 			 android:screenOrientation="portrait"
@@ -34,7 +32,10 @@
                 android:configChanges="orientation|keyboardHidden"
 				windowSoftInputMode="adjustPan"
 			    >
-			    
+
+			<action android:name="android.intent.action.MAIN" />
+			<category android:name="android.intent.category.LAUNCHER" />
+			
 			<!-- Tell NativeActivity the name of our .so -->
             <meta-data android:name="android.app.lib_name"
                     android:value="$(AndroidAppLibName)" />

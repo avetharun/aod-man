@@ -45,9 +45,6 @@
     <ClInclude Include="rsm_hooks.h" />
     <ClInclude Include="rsm_renderer.h" />
     <ClInclude Include="rsm_assets.h" />
-    <ClInclude Include="image_parse_face.h">
-      <Filter>dlib</Filter>
-    </ClInclude>
     <ClInclude Include="ani.h" />
     <ClInclude Include="cwerror.h" />
     <ClInclude Include="imgui\imgui_markdown.h">
@@ -77,8 +74,6 @@
     <ClInclude Include="ndk-helper\vecmath.h">
       <Filter>ndk-helper</Filter>
     </ClInclude>
-    <ClInclude Include="tiny_obj_loader.h" />
-    <ClInclude Include="tiny_gltf.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="android_native_app_glue.c" />
@@ -103,12 +98,6 @@
     </ClCompile>
     <ClCompile Include="imgui\imgui_demo.cpp">
       <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="dlib\dlib_compile.cpp">
-      <Filter>dlib</Filter>
-    </ClCompile>
-    <ClCompile Include="image_parse_face.cpp">
-      <Filter>dlib</Filter>
     </ClCompile>
     <ClCompile Include="curlpp.cpp" />
     <ClCompile Include="ndk-helper\JNIHelper.cpp">
@@ -136,9 +125,6 @@
   <ItemGroup>
     <Filter Include="imgui">
       <UniqueIdentifier>{11787d87-e491-4656-95c5-ac7d87d5877e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlib">
-      <UniqueIdentifier>{26b65660-5aa1-4d3e-99ae-6e2ada9d7e9f}</UniqueIdentifier>
     </Filter>
     <Filter Include="ndk-helper">
       <UniqueIdentifier>{2b6aebee-26fb-431d-af89-988faafe5aef}</UniqueIdentifier>

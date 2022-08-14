@@ -6,3 +6,4 @@
 #define _ALIB_FQUAL
 #define NULL
 #define FLT_MAX
+#define JNIEXPORT __attribute__ ((visibility ("default")))
